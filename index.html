@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>訂閱新片</title>
+<style>
+:root{
+  color-scheme:light;
+  --paper:#fbf7ee;--card:#fff;--ink:#2b2a28;--muted:#6d6a63;
+  --sky:#a9d3ea;--sun:#f3c552;--red:#e0675a;--leaf:#8fc28a;--mist:#e9f3f8;
+  --display:"Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --stroke:2.5px solid var(--ink);--radius:16px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;margin:0;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:52em;margin:0 auto;padding:0 16px 64px}
+h1,h2{font-family:var(--display);margin:0;line-height:1.3}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+header.top{padding:18px 0 10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+header.top h1{font-size:1.7rem;letter-spacing:.08em;display:flex;align-items:center;gap:10px}
+header.top h1 svg{width:38px;height:38px;flex:none}
+.updated{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+
+.panel{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:var(--stroke);margin:0 -16px;padding:8px 16px 10px;display:grid;gap:8px}
+.row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.row::-webkit-scrollbar{display:none}
+.chip{flex:none;border:2px solid var(--ink);border-radius:999px;background:var(--card);padding:3px 12px;font-size:.88rem;font-weight:500;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--sun);font-weight:700}
+.chip .n{font-variant-numeric:tabular-nums;color:var(--muted);margin-left:4px;font-weight:500}
+.chip[aria-pressed="true"] .n{color:var(--ink)}
+.chip:disabled{opacity:.4}
+.seg{flex:none;display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;padding:3px 11px;font-size:.85rem;border-right:2px solid var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--sky);font-weight:700}
+.search{flex:1 1 10em;min-width:8em;border:2px solid var(--ink);border-radius:999px;background:var(--card);padding:4px 14px;font-size:.9rem}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.summary{margin:14px 0 4px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.summary b{color:var(--ink);background:linear-gradient(transparent 62%,rgba(243,197,82,.55) 62%)}
+.linkbtn{border:0;background:none;padding:0;text-decoration:underline;color:var(--ink);font-size:.9rem}
+
+.day{margin-top:20px;background:var(--card);border:var(--stroke);border-radius:var(--radius);overflow:hidden}
+.day h2{background:var(--sky);border-bottom:var(--stroke);padding:7px 16px;font-size:1.02rem;display:flex;justify-content:space-between;gap:10px}
+.day h2 small{font-family:var(--body);font-weight:500;font-size:.85rem;font-variant-numeric:tabular-nums}
+.list{list-style:none;margin:0;padding:0}
+.vid{display:grid;grid-template-columns:168px 1fr auto;gap:12px;padding:12px 14px;border-bottom:1.5px dashed #cfc9bb;align-items:start}
+.vid:last-child{border-bottom:0}
+.thumb{position:relative;display:block;border:2px solid var(--ink);border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:var(--mist)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dur{position:absolute;right:4px;bottom:4px;background:var(--ink);color:#fff;font-size:.72rem;padding:0 5px;border-radius:5px;font-variant-numeric:tabular-nums}
+.info{min-width:0;display:grid;gap:4px}
+.title{font-weight:700;line-height:1.4;color:var(--ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:.8rem;color:var(--muted);align-items:center}
+.tag{border:1.5px solid var(--ink);border-radius:999px;padding:0 8px;background:var(--mist);color:var(--ink)}
+.tag.short{background:var(--red);color:#fff}
+.tag.live{background:var(--sun)}
+.done{width:36px;height:36px;border:2px solid var(--ink);border-radius:50%;background:var(--card);font-size:1rem;display:grid;place-items:center;padding:0}
+.vid.seen{opacity:.45}
+.vid.seen .done{background:var(--leaf)}
+@media (max-width:560px){
+  .vid{grid-template-columns:120px 1fr;grid-template-areas:"t i" "t d"}
+  .vid .thumb{grid-area:t}.vid .info{grid-area:i}.vid .done{grid-area:d;justify-self:end;width:32px;height:32px}
+  .title{-webkit-line-clamp:3;font-size:.95rem}
+}
+.empty,.gate{margin-top:28px;background:var(--card);border:2px dashed var(--ink);border-radius:var(--radius);padding:22px 18px;text-align:center;color:var(--muted)}
+.gate b{color:var(--ink)}
+footer{padding:28px 0;font-size:.8rem;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="10" width="38" height="28" rx="8" fill="#e0675a" stroke="#2b2a28" stroke-width="2.5"/><path d="M21 18v12l10-6z" fill="#fff" stroke="#2b2a28" stroke-width="2.5" stroke-linejoin="round"/><path d="M17 42h14" stroke="#2b2a28" stroke-width="2.5" stroke-linecap="round"/></svg>
+      訂閱新片
+    </h1>
+    <span class="updated" id="updated"></span>
+  </header>
+
+  <div class="panel" id="panel" hidden>
+    <div class="row" id="cats" role="group" aria-label="分類"></div>
+    <div class="tools">
+      <div class="seg" id="type" role="group" aria-label="類型">
+        <button data-v="all">全部</button><button data-v="long">長片</button><button data-v="short">Shorts</button>
+      </div>
+      <div class="seg" id="days" role="group" aria-label="期間">
+        <button data-v="1">今天</button><button data-v="3">3天</button><button data-v="7">7天</button><button data-v="14">14天</button>
+      </div>
+      <button class="chip" id="hide" aria-pressed="false">隱藏已看</button>
+      <input class="search" id="q" type="search" placeholder="搜尋標題或頻道" aria-label="搜尋">
+    </div>
+  </div>
+
+  <div class="summary" id="summary" hidden></div>
+  <main id="main"></main>
+  <footer>資料每天 05:30 更新｜賢哥 × CC</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  var WD = "日一二三四五六";
+
+  // ---- 鑰匙：網址 # 後面帶 k=...（不會送到伺服器），存進本機後從網址列拿掉 ----
+  var hash = new URLSearchParams(location.hash.slice(1));
+  var keyFromUrl = !!hash.get("k");
+  var key = hash.get("k") || store.get("k", null);
+  if (hash.get("k")) {
+    store.set("k", hash.get("k"));
+    var keep = new URLSearchParams(hash); keep.delete("k");
+    history.replaceState(null, "", location.pathname + (keep.toString() ? "#" + keep : ""));
+  }
+
+  var data = null;
+  var watched = new Set(store.get("watched", []));
+  var f = store.get("filters", { cats: [], type: "all", days: 3, hide: true });
+  // 從通知點進來指定的分類/天數只套用這一次，不蓋掉平常的預設篩選
+  var fromLink = !!(hash.get("c") || hash.get("d"));
+  if (hash.get("c")) f.cats = hash.get("c").split(",");
+  if (hash.get("d")) f.days = +hash.get("d") || f.days;
+  var q = "";
+
+  function b64(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+
+  function gate(msg) { $("main").innerHTML = '<div class="gate">' + msg + "</div>"; }
+
+  function load() {
+    if (!key) { gate("<b>請用 Telegram 通知裡的專屬連結開啟</b><br>這個頁面的內容是加密的，要有鑰匙才看得到。"); return; }
+    if (!window.crypto || !crypto.subtle) { gate("這個瀏覽器不支援解密，請改用 Chrome 或 Safari 開啟。"); return; }
+    gate("載入中…");
+    fetch("feed.enc?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (enc) {
+        return crypto.subtle.importKey("raw", b64(key), "AES-GCM", false, ["decrypt"]).then(function (k) {
+          return crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(enc.iv) }, k, b64(enc.ct));
+        });
+      })
+      .then(function (buf) {
+        data = JSON.parse(new TextDecoder().decode(buf));
+        init();
+      })
+      .catch(function (e) {
+        // OperationError＝鑰匙對不上或資料壞了；DataError＝鑰匙格式不對（連結被截斷）
+        if (e && (e.name === "OperationError" || e.name === "DataError")) {
+          // 剛從連結帶進來的鑰匙不清掉：可能只是網頁剛換鑰匙、資料還沒上線
+          if (!keyFromUrl) store.set("k", null);
+          gate("<b>解不開資料</b><br>請重新點一次 Telegram 通知裡的連結；如果剛收到通知，等 1～2 分鐘再點。");
+        }
+        else gate("<b>暫時載入不了</b><br>網路不穩或資料還在更新，等一下重新整理看看。");
+      });
+  }
+
+  function catOf(v) { var ch = data.channels[v.cid]; return (ch && ch.cat) || "other"; }
+  function chName(v) { var ch = data.channels[v.cid]; return (ch && ch.name) || v.channel || ""; }
+  function since(days) {
+    var now = new Date(Date.now() + 8 * 3600e3); // 台北時間
+    now.setUTCDate(now.getUTCDate() - (days - 1));
+    return now.toISOString().slice(0, 10);
+  }
+  function fmtDur(s) { if (!s) return ""; s = Math.round(s); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0"); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  // 除了「分類」以外的條件，用來算每個分類 chip 的數量
+  function baseMatch(v) {
+    if (v.date < since(f.days)) return false;
+    if (f.type === "long" && v.short) return false;
+    if (f.type === "short" && !v.short) return false;
+    if (f.hide && watched.has(v.id)) return false;
+    if (q) { var t = (v.title + " " + chName(v)).toLowerCase(); if (t.indexOf(q) < 0) return false; }
+    return true;
+  }
+  function match(v) { return baseMatch(v) && (!f.cats.length || f.cats.indexOf(catOf(v)) >= 0); }
+
+  function init() {
+    var u = new Date(data.updated);
+    $("updated").textContent = "更新於 " + (u.getMonth() + 1) + "/" + u.getDate() + " " + String(u.getHours()).padStart(2, "0") + ":" + String(u.getMinutes()).padStart(2, "0");
+    if (Date.now() - u.getTime() > 26 * 3600e3) {
+      $("updated").textContent += "　⚠️ 超過一天沒更新，巡檢可能沒跑";
+      $("updated").style.color = "var(--red)";
+    }
+    $("panel").hidden = false; $("summary").hidden = false;
+    var known = data.categories.map(function (c) { return c.id; });
+    f.cats = f.cats.filter(function (c) { return known.indexOf(c) >= 0; });
+
+    [["type", "type"], ["days", "days"]].forEach(function (p) {
+      $(p[0]).addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        f[p[1]] = p[1] === "days" ? +b.dataset.v : b.dataset.v; save(); render();
+      });
+    });
+    $("hide").addEventListener("click", function () { f.hide = !f.hide; save(); render(); });
+    $("q").addEventListener("input", function () { q = this.value.trim().toLowerCase(); render(); });
+    $("cats").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var id = b.dataset.c;
+      if (id === "") f.cats = [];
+      else { var i = f.cats.indexOf(id); if (i >= 0) f.cats.splice(i, 1); else f.cats.push(id); }
+      save(); render();
+    });
+    $("main").addEventListener("click", function (e) {
+      var d = e.target.closest(".done"), a = e.target.closest("a[data-id]");
+      if (d) { toggle(d.dataset.id); render(); }
+      else if (a) { watched.add(a.dataset.id); saveWatched(); setTimeout(render, 300); }
+    });
+    $("summary").addEventListener("click", function (e) {
+      var b = e.target.closest("#allseen"); if (!b) return;
+      if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "確定？再按一次"; return; }
+      data.videos.filter(match).forEach(function (v) { watched.add(v.id); }); saveWatched(); render();
+    });
+    render();
+  }
+
+  function toggle(id) { if (watched.has(id)) watched.delete(id); else watched.add(id); saveWatched(); }
+  function save() {
+    var s = store.get("filters", f);
+    s.type = f.type; s.hide = f.hide;
+    if (!fromLink) { s.cats = f.cats; s.days = f.days; }
+    store.set("filters", s);
+  }
+  function saveWatched() {
+    // 只留還在資料裡的，避免越存越大
+    var live = new Set(data.videos.map(function (v) { return v.id; }));
+    var arr = Array.from(watched).filter(function (id) { return live.has(id); });
+    watched = new Set(arr); store.set("watched", arr);
+  }
+
+  function render() {
+    // chips
+    var counts = {}, total = 0;
+    data.videos.forEach(function (v) { if (baseMatch(v)) { var c = catOf(v); counts[c] = (counts[c] || 0) + 1; total++; } });
+    var html = '<button class="chip" data-c="" aria-pressed="' + (!f.cats.length) + '">全部<span class="n">' + total + "</span></button>";
+    data.categories.forEach(function (c) {
+      var n = counts[c.id] || 0, on = f.cats.indexOf(c.id) >= 0;
+      html += '<button class="chip" data-c="' + esc(c.id) + '" aria-pressed="' + on + '"' + (n || on ? "" : " disabled") + ">" + esc(c.emoji + " " + c.name) + '<span class="n">' + n + "</span></button>";
+    });
+    $("cats").innerHTML = html;
+    [["type", f.type], ["days", String(f.days)]].forEach(function (p) {
+      Array.prototype.forEach.call($(p[0]).children, function (b) { b.setAttribute("aria-pressed", b.dataset.v === p[1]); });
+    });
+    $("hide").setAttribute("aria-pressed", f.hide);
+
+    var vids = data.videos.filter(match);
+    var nLong = vids.filter(function (v) { return !v.short; }).length;
+    $("summary").innerHTML = "<span>共 <b>" + vids.length + "</b> 支（長片 " + nLong + "、Shorts " + (vids.length - nLong) + "）</span>" +
+      (vids.length ? '<button class="linkbtn" id="allseen">這些全部標為已看</button>' : "");
+
+    if (!vids.length) {
+      $("main").innerHTML = '<div class="empty">' + (data.videos.length ? "這個條件下沒有影片。換個分類或拉長天數看看。" : "還沒有新片，明天早上再來。") + "</div>";
+      return;
+    }
+    var byDay = {}, order = [];
+    vids.forEach(function (v) { if (!byDay[v.date]) { byDay[v.date] = []; order.push(v.date); } byDay[v.date].push(v); });
+    var catName = {}; data.categories.forEach(function (c) { catName[c.id] = c.emoji + " " + c.name; });
+    var out = "";
+    order.forEach(function (d) {
+      var dt = new Date(d + "T00:00:00+08:00");
+      out += '<section class="day"><h2>' + (dt.getMonth() + 1) + "/" + dt.getDate() + "（" + WD[dt.getDay()] + "）<small>" + byDay[d].length + " 支</small></h2><ul class=\"list\">";
+      byDay[d].forEach(function (v) {
+        var id = esc(v.id);
+        var url = "https://www.youtube.com/" + (v.short ? "shorts/" : "watch?v=") + id;
+        var seen = watched.has(v.id);
+        var live = v.live_status === "is_live" ? '<span class="tag live">🔴 直播中</span>' : v.live_status === "is_upcoming" ? '<span class="tag live">⏰ 預約</span>' : "";
+        out += '<li class="vid' + (seen ? " seen" : "") + '">' +
+          '<a class="thumb" href="' + url + '" target="_blank" rel="noopener" data-id="' + id + '" tabindex="-1"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + id + '/mqdefault.jpg">' +
+          (v.duration ? '<span class="dur">' + fmtDur(v.duration) + "</span>" : "") + "</a>" +
+          '<div class="info"><a class="title" href="' + url + '" target="_blank" rel="noopener" data-id="' + id + '">' + esc(v.title) + "</a>" +
+          '<div class="meta"><span>' + esc(chName(v)) + '</span><span class="tag">' + esc(catName[catOf(v)] || "未分類") + "</span>" +
+          (v.short ? '<span class="tag short">Shorts</span>' : "") + live + "</div></div>" +
+          '<button class="done" data-id="' + id + '" aria-label="' + (seen ? "改回未看" : "標為已看") + '">' + (seen ? "✓" : "○") + "</button></li>";
+      });
+      out += "</ul></section>";
+    });
+    $("main").innerHTML = out;
+  }
+
+  // 已開著的分頁再點另一條通知連結時，只有 # 後面會變，頁面不會重新載入
+  window.addEventListener("hashchange", function () { if (location.hash.length > 1) location.reload(); });
+  load();
+})();
+</script>
+</body>
+</html>
