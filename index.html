@@ -6,6 +6,12 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>訂閱新片</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="訂閱新片">
+<meta name="theme-color" content="#fbf7ee">
 <style>
 :root{
   color-scheme:light;
@@ -115,15 +121,13 @@ footer{padding:28px 0;font-size:.8rem;color:var(--muted);text-align:center}
   var $ = function (id) { return document.getElementById(id); };
   var WD = "日一二三四五六";
 
-  // ---- 鑰匙：網址 # 後面帶 k=...（不會送到伺服器），存進本機後從網址列拿掉 ----
+  // ---- 鑰匙：網址 # 後面帶 k=...（不會送到伺服器），存進本機 ----
+  // 鑰匙留在網址列不拿掉：iPhone「加到主畫面」用的是當下網址，且不共用 Safari 的本機資料，拿掉就打不開
   var hash = new URLSearchParams(location.hash.slice(1));
   var keyFromUrl = !!hash.get("k");
   var key = hash.get("k") || store.get("k", null);
-  if (hash.get("k")) {
-    store.set("k", hash.get("k"));
-    var keep = new URLSearchParams(hash); keep.delete("k");
-    history.replaceState(null, "", location.pathname + (keep.toString() ? "#" + keep : ""));
-  }
+  if (keyFromUrl) store.set("k", hash.get("k"));
+  else if (key) history.replaceState(null, "", location.pathname + "#k=" + key);
 
   var data = null;
   var watched = new Set(store.get("watched", []));
